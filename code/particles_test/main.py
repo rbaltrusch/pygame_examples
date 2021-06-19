@@ -2,6 +2,9 @@
 """
 Created on Sun May  2 20:52:31 2021
 
+Showcases three different particle effects. Jump from one to the next by pressing
+the close window button.
+
 @author: Korean_Crimson
 """
 
@@ -9,17 +12,10 @@ import random
 import time
 import pygame
 
-TERMINATED = False
-
-pygame.init()
-SCREEN = pygame.display.set_mode((600, 400))
-MOUSE_POS = pygame.mouse.get_pos()
-PARTICLES = []
-STARTSIZE = 25
-DELAY = 0.02
-LAST_TIME = time.time()
-COLOUR = (100, 100, 255)
-WIDTH = 0
+PARTICLES = [] #contains all particles
+STARTSIZE = 25 #start size of the particle
+DELAY = 0.02 #fixes framerate to 50 fps
+WIDTH = 0 #0 for a fully-coloured particle, or a positive int for a bordered particle
 
 class RectParticle:
     def __init__(self, x, y, size, colour, width):
@@ -32,13 +28,12 @@ class RectParticle:
         self.expired = False
 
     def update(self):
+        """Play around with the update function to get various particle effects"""
         if self.size > 0:
             self.size -= 1
         else:
             self.expired = True
-        # self.colour = [c - 5 for c in self.colour]
-        r,g,b = self.colour
-        self.colour = [r, g, b - 2]
+        self._update_colour()
         self.x += 2
         self.y += 2
 
@@ -47,32 +42,68 @@ class RectParticle:
             rect = pygame.Rect(self.x, self.y, self.size, self.size)
             pygame.draw.rect(SCREEN, self.colour, rect, self.width)
 
+    def _update_colour(self):
+        r,g,b = self.colour
+        blue = b - 2 if b >= 2 else 0
+        self.colour = [r, g, blue]
+
+class FadingRectParticle(RectParticle):
+    def _update_colour(self):
+        """Overrides RectParticle._update_colour"""
+        self.colour = [c - 5 if c >= 5 else 0 for c in self.colour]
+        
 class CircleParticle(RectParticle):
     def draw(self):
         if not self.expired:
             pygame.draw.circle(SCREEN, self.colour, (self.x, self.y), self.size)
 
-def draw_particles():
-    PARTICLES.append(RectParticle(*MOUSE_POS, STARTSIZE, COLOUR, WIDTH))
+def draw_particles(mouse_pos, particle_type, colour):
+    """Appends a new particle at the mouse_position, of the specified type and colour"""
+    PARTICLES.append(particle_type(*mouse_pos, STARTSIZE, colour, WIDTH))
 
-while not TERMINATED:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            TERMINATED = True
+def init():
+    """Initialises the pygame display"""
+    global SCREEN
+    pygame.init()
+    SCREEN = pygame.display.set_mode((600, 400))
 
-    if not time.time() - LAST_TIME > DELAY:
-        continue
+def main(particle_type, colour):
+    """Runs the particle effect, accepts a particle_type (class object) and a colour (rgb tuple)"""
+    previous_mouse_pos = pygame.mouse.get_pos()
+    previous_time = time.time()
 
-    mouse_pos = pygame.mouse.get_pos()
-    if mouse_pos != MOUSE_POS:
-        draw_particles()
-    LAST_TIME = time.time()
-    MOUSE_POS = mouse_pos
+    terminated = False
+    while not terminated:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminated = True
+    
+        if not time.time() - previous_time > DELAY:
+            continue
+    
+        mouse_pos = pygame.mouse.get_pos()
+        if mouse_pos != previous_mouse_pos:
+            draw_particles(mouse_pos, particle_type, colour)
+        previous_time = time.time()
+        previous_mouse_pos = mouse_pos
+    
+        SCREEN.fill((0, 0, 0))
+        for particle in PARTICLES:
+            particle.update()
+            particle.draw()
+        pygame.display.flip()
 
-    SCREEN.fill((0, 0, 0))
-    for particle in PARTICLES:
-        particle.update()
-        particle.draw()
-    pygame.display.flip()
 
-pygame.display.quit()
+if __name__ == '__main__':
+    init()
+
+    #blue rectangular particle effect
+    main(particle_type=RectParticle, colour=(100, 100, 255))
+
+    #red circular particle effect
+    main(particle_type=CircleParticle, colour=(255, 100, 100))
+
+    #fading white rectangular particle effect
+    main(particle_type=FadingRectParticle, colour=(255, 255, 255))
+
+    pygame.display.quit()
