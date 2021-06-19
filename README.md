@@ -4,6 +4,9 @@ A repository for short pygame drafts, examples, tutorials and more!
 
 Currently, this repository contains a draft lighting system and a particle system.
 
+![Gif of the particle effects](https://github.com/rbaltrusch/pygame_examples/blob/master/media/particle_effects.gif?raw=true "Gif of the particle effects")
+![Gif of the lighting system](https://github.com/rbaltrusch/pygame_examples/blob/master/media/lighting_system.gif?raw=true "Gif of the lighting system")
+
 ## Getting started
 
 To get a copy of this repository, simply open up git bash in an empty folder and use the command:
