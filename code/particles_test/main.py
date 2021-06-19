@@ -9,8 +9,10 @@ the close window button.
 """
 
 import random
-import time
 import pygame
+
+#pylint: disable=no-member
+#pylint: disable=invalid-name
 
 PARTICLES = [] #contains all particles
 STARTSIZE = 25 #start size of the particle
@@ -18,7 +20,10 @@ DELAY = 0.02 #fixes framerate to 50 fps
 WIDTH = 0 #0 for a fully-coloured particle, or a positive int for a bordered particle
 
 class RectParticle:
-    def __init__(self, x, y, size, colour, width):
+    """Base (rectangular) particle class"""
+
+    def __init__(self, position, size, colour, width):
+        x, y = position
         self.x = x + random.randint(-20, 20)
         self.y = y + random.randint(-20, 20)
         self.size = size
@@ -38,6 +43,7 @@ class RectParticle:
         self.y += 2
 
     def draw(self):
+        """Draws the particle on the screen"""
         if not self.expired:
             rect = pygame.Rect(self.x, self.y, self.size, self.size)
             pygame.draw.rect(SCREEN, self.colour, rect, self.width)
@@ -48,51 +54,52 @@ class RectParticle:
         self.colour = [r, g, blue]
 
 class FadingRectParticle(RectParticle):
+    """Rectangular particle that fades quickly"""
+
     def _update_colour(self):
         """Overrides RectParticle._update_colour"""
         self.colour = [c - 5 if c >= 5 else 0 for c in self.colour]
-        
+
 class CircleParticle(RectParticle):
+    """Circular particle"""
+
     def draw(self):
+        """Draws the particle on the screen"""
         if not self.expired:
             pygame.draw.circle(SCREEN, self.colour, (self.x, self.y), self.size)
 
 def draw_particles(mouse_pos, particle_type, colour):
     """Appends a new particle at the mouse_position, of the specified type and colour"""
-    PARTICLES.append(particle_type(*mouse_pos, STARTSIZE, colour, WIDTH))
+    PARTICLES.append(particle_type(mouse_pos, STARTSIZE, colour, WIDTH))
 
 def init():
     """Initialises the pygame display"""
-    global SCREEN
+    #pylint: disable=global-variable-undefined
+    global SCREEN, CLOCK
     pygame.init()
     SCREEN = pygame.display.set_mode((600, 400))
+    CLOCK = pygame.time.clock()
 
 def main(particle_type, colour):
     """Runs the particle effect, accepts a particle_type (class object) and a colour (rgb tuple)"""
     previous_mouse_pos = pygame.mouse.get_pos()
-    previous_time = time.time()
-
     terminated = False
     while not terminated:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminated = True
-    
-        if not time.time() - previous_time > DELAY:
-            continue
-    
+
         mouse_pos = pygame.mouse.get_pos()
         if mouse_pos != previous_mouse_pos:
             draw_particles(mouse_pos, particle_type, colour)
-        previous_time = time.time()
         previous_mouse_pos = mouse_pos
-    
+
         SCREEN.fill((0, 0, 0))
         for particle in PARTICLES:
             particle.update()
             particle.draw()
         pygame.display.flip()
-
+        CLOCK.tick(50)
 
 if __name__ == '__main__':
     init()
