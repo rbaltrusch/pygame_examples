@@ -22,7 +22,7 @@ Written in Python 3.8.3.
 
 ## License
 
-This repository is open-source software available under the [MIT license](https://github.com/rbaltrusch/python_interpreter/blob/main/LICENSE).
+This repository is open-source software available under the [MIT license](https://github.com/rbaltrusch/pygame_examples/blob/main/LICENSE).
 
 ## Contact
 
