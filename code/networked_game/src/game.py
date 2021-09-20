@@ -5,27 +5,35 @@ Created on Sun May 16 18:46:57 2021
 @author: Korean_Crimson
 """
 
-import os
 import pygame
 from client import Network
 
-pygame.init() #pylint: disable=no-member
-screen = pygame.display.set_mode((600, 600))
-clock = pygame.time.Clock()
-surf = pygame.image.load(os.path.join("media", "image.png"))
-rect = surf.get_rect()
-network = Network()
+def main():
+    """Main function"""
+    pygame.init()
+    screen = pygame.display.set_mode((600, 600))
+    clock = pygame.time.Clock()
+    rect = pygame.Rect(0, 0, 50, 50)
+    network = Network()
 
-while True:
-    clock.tick(60)
-    for event in pygame.event.get():
-        pass
-    data = network.send('get')
-    if data:
-        speed = [int(x) for x in data.split(',')]
-        print(speed)
-        rect = rect.move(speed)
-    print(data)
-    screen.fill((0, 0, 0))
-    screen.blit(surf, rect)
-    pygame.display.flip()
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        data = network.send('get')
+        if data:
+            speed = [int(x) for x in data.split(',')]
+            rect = rect.move(speed)
+        print(data)
+
+        screen.fill((0, 0, 0))
+        pygame.draw.rect(screen, (255, 255, 255), rect)
+        pygame.display.flip()
+        clock.tick(60)
+
+    pygame.quit()
+
+if __name__ == '__main__':
+    main()

@@ -9,39 +9,30 @@ import socket
 from _thread import start_new_thread
 import config
 
-#pylint: disable=invalid-name
-
-socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-try:
-    socket_.bind((config.SERVER_IP, config.PORT))
-except socket.error as e:
-    str(e)
-
-socket_.listen(config.MAX_CLIENTS)
-reply = "0,0"
-print("Waiting for a connection, Server Started")
+last_request = None
 
 def threaded_client(conn):
     """Tries to receive data from the client connection until the connection is
     terminated. Currently sends back the data received to all clients, unless
     the data received is equal to 'get', in which case it sends the last reply.
     """
+    global last_request
+
     conn.send(str.encode("Connected"))
     while True:
         try:
             data = conn.recv(config.CHUNKSIZE)
-            decoded = data.decode("utf-8")
-
             if not data:
                 print("Disconnected")
                 break
 
-            print("Received: ", decoded)
-            global reply #pylint: disable=global-statement
-            reply = decoded if decoded != 'get' else reply
+            request_ = data.decode("utf-8")
+            if request_ == 'get':
+                reply = last_request if last_request is not None else "0,0"
+            else:
+                last_request = reply = request_
 
-            print("Sending : ", reply)
-
+            print("Received {}. Sending: {}.".format(request_, reply))
             conn.sendall(str.encode(reply))
         except Exception as e:
             raise e
@@ -49,11 +40,20 @@ def threaded_client(conn):
     print("Lost connection")
     conn.close()
 
-def main():
-    """Main function"""
+def mainloop(socket_):
+    """Accepts connections"""
     conn, addr = socket_.accept()
     print("Connected to:", addr)
     start_new_thread(threaded_client, (conn,))
 
-while True:
+def main():
+    """Main function"""
+    socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    socket_.bind((config.SERVER_IP, config.PORT))
+    socket_.listen(config.MAX_CLIENTS)
+    print("Waiting for a connection, Server Started")
+    while True:
+        mainloop(socket_)
+
+if __name__ == '__main__':
     main()
