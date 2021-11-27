@@ -16,7 +16,6 @@ import pygame
 
 PARTICLES = [] #contains all particles
 STARTSIZE = 25 #start size of the particle
-DELAY = 0.02 #fixes framerate to 50 fps
 WIDTH = 0 #0 for a fully-coloured particle, or a positive int for a bordered particle
 
 class RectParticle:
