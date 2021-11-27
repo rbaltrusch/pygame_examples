@@ -78,7 +78,7 @@ def init():
     global SCREEN, CLOCK
     pygame.init()
     SCREEN = pygame.display.set_mode((600, 400))
-    CLOCK = pygame.time.clock()
+    CLOCK = pygame.time.Clock()
 
 def main(particle_type, colour):
     """Runs the particle effect, accepts a particle_type (class object) and a colour (rgb tuple)"""
