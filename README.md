@@ -11,11 +11,13 @@ Currently, this repository contains a draft lighting system and a particle syste
 
 To get a copy of this repository, simply open up git bash in an empty folder and use the command:
 
-		$ git clone https://github.com/rbaltrusch/pygame_examples
+    $ git clone https://github.com/rbaltrusch/pygame_examples
 
 Dependencies can be installed using the requirements.txt as below:
 
-        pip install -r requirements.txt
+```
+pip install -r requirements.txt
+```
 
 To run some of the examples, navigate to the respective folder in the code folder, then run main.py.
 
