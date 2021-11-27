@@ -2,7 +2,7 @@
 
 A repository for short pygame drafts, examples, tutorials and more!
 
-Currently, this repository contains a draft lighting system and a particle system.
+Currently, this repository contains a draft lighting system, a particle system, a networked game, and more.
 
 ![Gif of the particle effects](https://github.com/rbaltrusch/pygame_examples/blob/master/media/particle_effects.gif?raw=true "Gif of the particle effects")
 ![Gif of the lighting system](https://github.com/rbaltrusch/pygame_examples/blob/master/media/lighting_system.gif?raw=true "Gif of the lighting system")
