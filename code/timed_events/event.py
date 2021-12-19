@@ -11,24 +11,36 @@ reduces coupling in game code.
 
 @author: Korean_Crimson
 """
+from __future__ import annotations
 
-import time
 import functools
+import time
+from dataclasses import dataclass
+from typing import Callable
+
 import pygame
 
 SCREEN_HEIGHT = (800, 600)
 
+# pylint: disable=no-member
+
+
+@dataclass
 class Event:
     """Event class. When the specified delay elapsed, the specified
     function will get executed when the event is handled."""
-    def __init__(self, function, delay):
-        self.function = function
-        self.timer = Timer(delay)
+
+    function: Callable
+    timer: Timer
+
+    def __post_init__(self):
         self.timer.start()
+
 
 class Timer:
     """A timer class, which gets started at a time and counts until a specified delay has passed"""
-    def __init__(self, delay, ignore_clock_pause=False):
+
+    def __init__(self, delay):
         self.time = 0
         self.delay = delay
 
@@ -40,7 +52,8 @@ class Timer:
         """Returns True if time since start time is over the delay, else False"""
         return time.time() - self.time > self.delay
 
-class Entity():
+
+class Entity:
     """Simplistic entity class. For this example only has an event_queue attribute"""
 
     def __init__(self):
@@ -57,21 +70,23 @@ class Entity():
                 event.func()
                 self.event_queue.remove(event)
 
-def function(entity):
+
+def event_function(entity):
     """Example function linked to the event"""
     print(time.time())
-    func = functools.partial(function, entity)
+    func = functools.partial(event_function, entity)
     entity.add_event(func, 1)
+
 
 def main():
     """Main function, initiates an entity with a 1 second cyclic event function"""
     pygame.init()
     pygame.display.set_mode(SCREEN_HEIGHT)
-    
+
     entity = Entity()
-    func = functools.partial(function, entity)
+    func = functools.partial(event_function, entity)
     entity.add_event(func, 1)
-    
+
     terminated = False
     while not terminated:
         for event in pygame.event.get():
@@ -81,5 +96,6 @@ def main():
         pygame.display.update()
     pygame.quit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

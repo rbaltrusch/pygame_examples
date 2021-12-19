@@ -4,10 +4,10 @@ Created on Sun May 16 18:46:57 2021
 
 @author: Korean_Crimson
 """
-
 import pygame
 from client import Network
 
+# pylint: disable=no-member
 def main():
     """Main function"""
     pygame.init()
@@ -22,11 +22,11 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-        data = network.send('get')
-        if data:
-            speed = [int(x) for x in data.split(',')]
-            rect = rect.move(speed)
+        data = network.send("get")
         print(data)
+        if data and "," in data:
+            speed = [int(x) for x in data.split(",")]
+            rect = rect.move(speed)
 
         screen.fill((0, 0, 0))
         pygame.draw.rect(screen, (255, 255, 255), rect)
@@ -35,5 +35,6 @@ def main():
 
     pygame.quit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

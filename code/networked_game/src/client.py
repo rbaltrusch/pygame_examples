@@ -4,9 +4,10 @@ Created on Sun May 16 18:46:57 2021
 
 @author: Korean_Crimson
 """
-
 import socket
+
 import config
+
 
 class Network:
     """Class used to connect to the server"""
@@ -16,15 +17,16 @@ class Network:
         self.server = config.SERVER_IP
         self.port = config.PORT
         self.addr = (self.server, self.port)
-        self.id = self.connect() #pylint: disable=invalid-name
+        self.id = self.connect()  # pylint: disable=invalid-name
 
     def connect(self):
         """Sends its address to the server and receives the server response"""
         try:
             self.client.connect(self.addr)
             return self.client.recv(config.CHUNKSIZE).decode()
-        except:
-            print('failed')
+        except:  # pylint: disable=bare-except
+            print("failed")
+        return None
 
     def send(self, data):
         """Sends the data (str) and returns the server response (str)"""
@@ -33,3 +35,4 @@ class Network:
             return self.client.recv(config.CHUNKSIZE).decode()
         except socket.error as exc:
             print(exc)
+        return None

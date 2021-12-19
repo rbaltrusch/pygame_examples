@@ -4,19 +4,22 @@ Created on Sun May 16 18:46:57 2021
 
 @author: Korean_Crimson
 """
-
 import socket
 from _thread import start_new_thread
+
 import config
 
-last_request = None
+# pylint: disable=invalid-name
+# pylint: disable=global-statement
+speed = "0,0"
+
 
 def threaded_client(conn):
     """Tries to receive data from the client connection until the connection is
     terminated. Currently sends back the data received to all clients, unless
     the data received is equal to 'get', in which case it sends the last reply.
     """
-    global last_request
+    global speed
 
     conn.send(str.encode("Connected"))
     while True:
@@ -27,24 +30,26 @@ def threaded_client(conn):
                 break
 
             request_ = data.decode("utf-8")
-            if request_ == 'get':
-                reply = last_request if last_request is not None else "0,0"
-            else:
-                last_request = reply = request_
 
-            print("Received {}. Sending: {}.".format(request_, reply))
+            if request_.startswith("set:"):
+                _, speed = request_.split(":")
+
+            reply = speed
+            print(f"Received {request_}. Sending: {reply}.")
             conn.sendall(str.encode(reply))
-        except Exception as e:
-            raise e
+        except Exception as exc:
+            raise exc
 
     print("Lost connection")
     conn.close()
+
 
 def mainloop(socket_):
     """Accepts connections"""
     conn, addr = socket_.accept()
     print("Connected to:", addr)
     start_new_thread(threaded_client, (conn,))
+
 
 def main():
     """Main function"""
@@ -55,5 +60,6 @@ def main():
     while True:
         mainloop(socket_)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
