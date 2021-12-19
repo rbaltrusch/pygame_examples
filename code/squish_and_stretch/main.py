@@ -7,31 +7,34 @@ depending on the current mouse position.
 
 @author: Korean_Crimson
 """
-
+# pylint: disable=no-member
 import pygame
 
+
 def main():
+    """Main function"""
     pygame.init()
-    SCREEN = pygame.display.set_mode((600, 400))
-    CLOCK = pygame.time.Clock()
-    SURFACE = pygame.image.load('image.png')
-    
+    screen = pygame.display.set_mode((600, 400))
+    clock = pygame.time.Clock()
+    surface = pygame.image.load("image.png")
+
     terminated = False
     while not terminated:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminated = True
-    
-        SCREEN.fill((100, 100, 255))
+
+        screen.fill((100, 100, 255))
         mouse_x, mouse_y = pygame.mouse.get_pos()
         size = (600 - mouse_x, 400 - mouse_y)
         rect = pygame.Rect(mouse_x, mouse_y, *size)
-        scaled_surface = pygame.transform.scale(SURFACE, size)
-        SCREEN.blit(scaled_surface, rect)
+        scaled_surface = pygame.transform.scale(surface, size)
+        screen.blit(scaled_surface, rect)
         pygame.display.flip()
-        CLOCK.tick(50)
-    
+        clock.tick(50)
+
     pygame.display.quit()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
