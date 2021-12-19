@@ -1,3 +1,5 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
+
 # Pygame examples
 
 A repository for short pygame drafts, examples, tutorials and more!
