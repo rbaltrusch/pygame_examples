@@ -21,6 +21,10 @@ pip install -r requirements.txt
 
 To run some of the examples, navigate to the respective folder in the code folder, then run main.py.
 
+## Contributions
+
+To contribute to this repository, please read the [contribution guidelines](CONTRIBUTING.md).
+
 ## Python
 
 Written in Python 3.8.3.
