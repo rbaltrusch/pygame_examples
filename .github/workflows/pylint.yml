@@ -21,4 +21,4 @@ jobs:
         pip install pygame==2.0.1
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py') -d=duplicate-code
+        pylint $(git ls-files '*.py') -d=duplicate-code --fail-under=9.5
