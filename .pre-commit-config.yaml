@@ -32,16 +32,17 @@ repos:
     hooks:
     -   id: pylint
         language_version: python3
+        args: [--fail-under=8.5]
 
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v2.6.0
     hooks:
     -   id: reorder-python-imports
-        args: [--application-directories=src, --py36-plus]
+        args: [--application-directories=code, --py36-plus]
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.910-1
     hooks:
     -   id: mypy
-        files: ^src/
-        args: []
+        files: ^code/
+        args: [--ignore-missing-imports]
