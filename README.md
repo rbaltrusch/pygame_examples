@@ -24,6 +24,18 @@ pip install -r requirements.txt
 
 To run some of the examples, navigate to the respective folder in the code folder, then run main.py.
 
+## Contents
+
+This repository contains the following small pygame examples:
+- (Particle system)[code_particle_system]: contains a simple, but effective, particle system implementation.
+- (Game console)[code/game_console]: contains a minimal implementation of an in-game console.
+- (Animation testing tool)[code/animator]: can be used to test out animations. Contains a fully featured in-game console with a decoupled and flexible design.
+- (Networked game)[code/networked_game]: contains a minimal implementation of a networked game, featuring one external server and two separate clients, communicating with each other through the server.
+- (Dynamic lighting)[code/simple_lighting]: contains a small draft implementation for dynamic in-game lighting.
+- (Squish and stretch)[code/squish_and_stretch]: contains an example implementation of squishing and stretching an image.
+- (Timed events)[code/timed_events]: contains an implementation of callbacks executed after a specified delay. Not pygame-specific.
+- (Random starry sky)[code/random_screen]: generates a random starry sky.
+
 ## Contributions
 
 To contribute to this repository, please read the [contribution guidelines](CONTRIBUTING.md).
