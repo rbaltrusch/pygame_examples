@@ -2,4 +2,4 @@
 
 ## Contents
 
-This example contains a small draft implementation for dynamic in-game lighting.
+This example contains a small draft implementation for dynamic in-game lighting and supports shadows.
