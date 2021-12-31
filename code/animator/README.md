@@ -2,6 +2,8 @@
 
 ## Content
 
+Contains a tool to test out different animations. Each animation is defined by a folder containing a number of images.
+
 ## How to run
 
 Run the main.py file to run the animation tool.
