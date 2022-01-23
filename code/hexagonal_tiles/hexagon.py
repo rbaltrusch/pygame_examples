@@ -21,10 +21,17 @@ class HexagonTile:
     radius: float
     position: Tuple[float, float]
     colour: Tuple[int, ...]
-    highlight_offset: int = 50
+    highlight_offset: int = 3
+    max_highlight_ticks: int = 15
 
     def __post_init__(self):
         self.vertices = self.compute_vertices()
+        self.highlight_tick = 0
+
+    def update(self):
+        """Updates tile highlights"""
+        if self.highlight_tick > 0:
+            self.highlight_tick -= 1
 
     def compute_vertices(self) -> List[Tuple[float, float]]:
         """Returns a list of the hexagon's vertices as x, y tuples"""
@@ -59,11 +66,12 @@ class HexagonTile:
 
     def render(self, screen) -> None:
         """Renders the hexagon on the screen"""
-        pygame.draw.polygon(screen, self.colour, self.vertices)
+        pygame.draw.polygon(screen, self.highlight_colour, self.vertices)
 
     def render_highlight(self, screen, border_colour) -> None:
         """Draws a border around the hexagon with the specified colour"""
-        pygame.draw.polygon(screen, self.highlight_colour, self.vertices)
+        self.highlight_tick = self.max_highlight_ticks
+        # pygame.draw.polygon(screen, self.highlight_colour, self.vertices)
         pygame.draw.aalines(screen, border_colour, closed=True, points=self.vertices)
 
     @property
@@ -81,5 +89,6 @@ class HexagonTile:
     @property
     def highlight_colour(self) -> Tuple[int, ...]:
         """Colour of the hexagon tile when rendering highlight"""
+        offset = self.highlight_offset * self.highlight_tick
         brighten = lambda x, y: x + y if x + y < 255 else 255
-        return tuple(brighten(x, self.highlight_offset) for x in self.colour)
+        return tuple(brighten(x, offset) for x in self.colour)

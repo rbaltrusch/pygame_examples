@@ -77,6 +77,10 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminated = True
+
+        for hexagon in hexagons:
+            hexagon.update()
+
         render(screen, hexagons)
         clock.tick(50)
     pygame.display.quit()
