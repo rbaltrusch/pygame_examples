@@ -31,15 +31,17 @@ def init_hexagons(num_x=20, num_y=20) -> List[HexagonTile]:
     hexagons = [leftmost_hexagon]
     for x in range(num_x):
         if x:
+            # alternate between bottom left and bottom right vertices of hexagon above
             index = 2 if x % 2 == 1 else 4
             position = leftmost_hexagon.vertices[index]
             leftmost_hexagon = create_hexagon(position)
             hexagons.append(leftmost_hexagon)
 
+        # place hexagons to the left of leftmost hexagon, with equal y-values.
         hexagon = leftmost_hexagon
         for _ in range(num_y):
-            x, y = hexagon.vertices[-1]
-            position = (x + hexagon.minimal_radius, y - hexagon.radius / 2)
+            x, y = hexagon.position  # type: ignore
+            position = (x + hexagon.minimal_radius * 2, y)
             hexagon = create_hexagon(position)
             hexagons.append(hexagon)
 
