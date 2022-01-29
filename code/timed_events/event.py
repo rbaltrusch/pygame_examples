@@ -61,13 +61,13 @@ class Entity:
 
     def add_event(self, function, delay):
         """Adds an event with the specified function and delay to the event queue"""
-        self.event_queue.append(Event(function, delay))
+        self.event_queue.append(Event(function, Timer(delay)))
 
     def handle_events(self):
         """Handles all events in the event queue. Removes handled events from the event queue"""
         for event in self.event_queue:
             if event.timer.get_timer():
-                event.func()
+                event.function()
                 self.event_queue.remove(event)
 
 
