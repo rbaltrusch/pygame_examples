@@ -58,6 +58,7 @@ class Entity:
 
     def __init__(self):
         self.event_queue = []
+        self.colour = None
 
     def add_event(self, function, delay):
         """Adds an event with the specified function and delay to the event queue"""
@@ -71,21 +72,23 @@ class Entity:
                 self.event_queue.remove(event)
 
 
-def event_function(entity):
+def event_function(entity, colour):
     """Example function linked to the event"""
     print(time.time())
-    func = functools.partial(event_function, entity)
-    entity.add_event(func, 1)
+    entity.colour = colour
+    colour = (0, 0, 0) if colour != (0, 0, 0) else (255, 255, 255)  # black or white
+    func = functools.partial(event_function, entity, colour)
+    entity.add_event(func, delay=1)
 
 
 def main():
     """Main function, initiates an entity with a 1 second cyclic event function"""
     pygame.init()
-    pygame.display.set_mode(SCREEN_HEIGHT)
+    screen = pygame.display.set_mode(SCREEN_HEIGHT)
 
     entity = Entity()
-    func = functools.partial(event_function, entity)
-    entity.add_event(func, 1)
+    func = functools.partial(event_function, entity, (255, 255, 255))
+    entity.add_event(func, delay=1)
 
     terminated = False
     while not terminated:
@@ -93,6 +96,8 @@ def main():
             if event.type == pygame.QUIT:
                 terminated = True
         entity.handle_events()
+        if entity.colour is not None:
+            screen.fill(entity.colour)
         pygame.display.update()
     pygame.quit()
 
