@@ -92,3 +92,26 @@ class HexagonTile:
         offset = self.highlight_offset * self.highlight_tick
         brighten = lambda x, y: x + y if x + y < 255 else 255
         return tuple(brighten(x, offset) for x in self.colour)
+
+
+class FlatTopHexagonTile(HexagonTile):
+    def compute_vertices(self) -> List[Tuple[float, float]]:
+        """Returns a list of the hexagon's vertices as x, y tuples"""
+        # pylint: disable=invalid-name
+        x, y = self.position
+        half_radius = self.radius / 2
+        minimal_radius = self.minimal_radius
+        return [
+            (x, y),
+            (x - half_radius, y + minimal_radius),
+            (x, y + 2 * minimal_radius),
+            (x + self.radius, y + 2 * minimal_radius),
+            (x + 3 * half_radius, y + minimal_radius),
+            (x + self.radius, y),
+        ]
+
+    @property
+    def centre(self) -> Tuple[float, float]:
+        """Centre of the hexagon"""
+        x, y = self.position  # pylint: disable=invalid-name
+        return (x, y + self.minimal_radius)
