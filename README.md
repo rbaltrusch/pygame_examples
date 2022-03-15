@@ -10,6 +10,7 @@ Currently, this repository contains a draft lighting system, a particle system, 
 ![Gif of the particle effects](https://github.com/rbaltrusch/pygame_examples/blob/master/media/particle_effects.gif?raw=true "Gif of the particle effects")
 ![Gif of the lighting system](https://github.com/rbaltrusch/pygame_examples/blob/master/media/lighting_system.gif?raw=true "Gif of the lighting system")
 ![Gif of the hexagonal tile map](media/hexagons.gif?raw=true "Gif of the hexagonal tile map")
+![Gif of a red light source](media/red_light.gif?raw=true "Gif of a red light source")
 
 ## Getting started
 
