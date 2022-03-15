@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 A light source experiment based on emitting light particles from a source point.
-Did not completely work out yet, as the particles are not blended properly.
+
+Use W and S keys to increase and decrease the particle speed
+(and thus the perceived brightness of the light source) during the simulation.
 
 @author: Korean_Crimson
 """
@@ -18,7 +20,7 @@ WIDTH = 800
 HEIGHT = 600
 ENERGY_DECAY = 0.05
 MIN_ENERGY = 0.05
-SPEED_SCALING = 40
+SPEED_SCALING = 5
 COLLISION_REDUCTION_FACTOR = 0.2
 MAX_RADIUS_INCREASE = 7  # this defines how chunky a particle will look!
 
