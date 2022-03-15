@@ -16,9 +16,11 @@ import pygame
 
 WIDTH = 800
 HEIGHT = 600
-DECAY = 0.01
-SPEED_SCALING = 5
-COLLISION_REDUCTION_FACTOR = 0.3
+ENERGY_DECAY = 0.05
+MIN_ENERGY = 0.05
+SPEED_SCALING = 40
+COLLISION_REDUCTION_FACTOR = 0.2
+MAX_RADIUS_INCREASE = 7  # this defines how chunky a particle will look!
 
 
 def saturate(value, min_val=0, max_val=255):
@@ -34,13 +36,14 @@ class LightParticle:
     position: Tuple[float]
     speed: Tuple[float]
     colour: Tuple[float]
+    max_radius_increase: int = MAX_RADIUS_INCREASE
 
     def update(self):
         """Updates the particle position, energy, colour and handles collisions"""
         pos_x, pos_y = self.position
         x, y = self.speed  # pylint: disable=invalid-name
         self.position = (pos_x + x * SPEED_SCALING, pos_y + y * SPEED_SCALING)
-        self.energy *= 1 - DECAY
+        self.energy *= 1 - ENERGY_DECAY
         self.update_colour()
         self.update_collisions()
 
@@ -72,6 +75,19 @@ class LightParticle:
 
     def render(self, screen):
         """Renders the particle on the screen"""
+        # render a number of circles around the main particle circle
+        max_increase = self.max_radius_increase
+        max_radius = self.radius + max_increase
+        surf = pygame.Surface((max_radius * 2, max_radius * 2))
+        for i in range(max_increase, 0, -2):
+            colour = tuple(
+                saturate(x * (max_increase - i) / (max_increase / 2))
+                for x in self.colour
+            )
+            radius = self.radius + i
+            pygame.draw.circle(surf, colour, (radius, radius), radius)
+        screen.blit(surf, self.position, special_flags=pygame.BLEND_RGBA_ADD)
+
         pygame.draw.circle(screen, self.colour, self.position, self.radius)
 
     @property
@@ -82,7 +98,7 @@ class LightParticle:
     @property
     def expired(self) -> bool:
         """The expired status of the particle, True if energy is less than zero"""
-        return self.energy <= 0
+        return self.energy <= MIN_ENERGY
 
 
 @dataclass
@@ -134,7 +150,7 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     light_source = LightSource(
-        spawn=20, energy=150, position=(200, 200), colour=(255, 50, 20, 20)
+        spawn=25, energy=30, position=(200, 200), colour=(255, 50, 20, 20)
     )
 
     terminated = False
@@ -142,6 +158,12 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminated = True
+            if event.type == pygame.KEYDOWN:
+                global SPEED_SCALING
+                if event.key == pygame.K_s:
+                    SPEED_SCALING -= 1
+                if event.key == pygame.K_w:
+                    SPEED_SCALING += 1
 
         light_source.update()
         light_source.position = pygame.mouse.get_pos()
