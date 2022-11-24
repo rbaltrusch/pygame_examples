@@ -46,7 +46,7 @@ class FoodParams:
 
 
 @dataclass(frozen=True)
-class AnimalParams:
+class AnimalParams:  # pylint: disable=too-many-instance-attributes
     """Simulation init parameters related to animals"""
 
     search_algorithm: SearchAlgorithm

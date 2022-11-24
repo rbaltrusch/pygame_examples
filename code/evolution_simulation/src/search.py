@@ -15,6 +15,9 @@ from typing import Tuple
 import pygame
 from src.coordinate import Coordinate
 
+# pylint: disable=c-extension-no-member
+# pylint: disable=too-few-public-methods
+
 
 class Entity(Protocol):
     """Entity interface"""
@@ -103,7 +106,9 @@ class SimplePositionClusterer:
     lerper: PositionLerper
 
     def cluster_positions(self, positions: Iterable[Coordinate]) -> List[Coordinate]:
-        """"""
+        """Clusters the specified positions by binning them, then using linear interpolation
+        to move positions in the same bin closer to each other.
+        """
         bin_averages = {
             k: average_positions(v)
             for k, v in self.position_binner.compute_position_bins(positions).items()
