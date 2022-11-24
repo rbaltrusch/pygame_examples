@@ -6,6 +6,9 @@ from __future__ import annotations
 
 import copy
 import random
+import statistics
+from collections import defaultdict
+from typing import DefaultDict
 from typing import List
 
 import pygame
@@ -17,6 +20,8 @@ from src.params import AnimalParams
 from src.params import FoodParams
 from src.params import RunnerParams
 from src.params import Stat
+from src.plotting import plot_data
+from src.plotting import PlotData
 from src.search import PositionBinner
 from src.search import PositionClusterer
 from src.search import SearchAlgorithm
@@ -121,6 +126,8 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode(size=tuple(SCREEN_SIZE))
     terminated = False
+
+    plotting_data = PlotData()
     while not terminated:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -135,9 +142,12 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
         animals = [animal for animal in animals if not animal.dead]
         foods = [food for food in foods if not food.dead]
         food_cloner.clone(foods, SCREEN_SIZE)
-        foods_dict = {f.position: f for f in foods}
-        for animal in animals:
-            animal.update(foods_dict)
+
+        foods_dict: DefaultDict[Coordinate, List[Food]] = defaultdict(list)
+        for food in foods:
+            foods_dict[food.position].append(food)
+        for animal in reversed(animals):
+            animal.update(foods, foods_dict)
         for food in foods:
             food.update()
         clone_animals(
@@ -152,36 +162,55 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
             entity.draw(screen)
         pygame.display.flip()
         clock.tick(FRAMERATE)
+
+        if not animals or not foods:
+            break
+
+        plotting_data.vision.append(statistics.mean(x.vision for x in animals))
+        plotting_data.size.append(statistics.mean(x.size for x in animals))
+        plotting_data.speed.append(statistics.mean(x.speed for x in animals))
+        plotting_data.energy_loss.append(
+            statistics.mean(x.energy_loss for x in animals)
+        )
+        plotting_data.food_energy.append(statistics.mean(x.energy for x in foods))
+        plotting_data.food_amount.append(len(foods))
+        plotting_data.animal_amount.append(len(animals))
+
     pygame.display.quit()
+    plot_data(plotting_data, "output.png")
 
 
 if __name__ == "__main__":
     main(
         params=RunnerParams(
             food=FoodParams(
-                initial_amount=250,
-                energy=Stat(average=10, standard_deviation=5),
-                energy_decay=Stat(average=0.05),
+                initial_amount=500,
+                energy=Stat(average=10, standard_deviation=4, min=1),
+                energy_decay=Stat(average=0.5),
             ),
             animal=AnimalParams(
-                search_algorithm=SearchAlgorithm(),
-                initial_amount=25,
-                vision=Stat(average=200, standard_deviation=75, min=1),
-                energy_loss=Stat(average=0.8, standard_deviation=0.4, min=0.2),
+                search_algorithm=SearchAlgorithm(max_entities_considered=2),
+                initial_amount=50,
+                vision=Stat(average=70, standard_deviation=10, min=1),
+                energy_loss=Stat(
+                    average=0.00007, standard_deviation=0.00001, min=0.00001
+                ),
                 cloning_size=Stat(average=25, standard_deviation=5),
-                food_reach_distance=Stat(average=20),
+                food_reach_distance=Stat(average=10, standard_deviation=2, min=1),
+                speed=Stat(average=3, standard_deviation=0.5, min=0.3),
+                food_size_factor=Stat(average=1),
             ),
             position_clusterer=SimplePositionClusterer(
                 PositionBinner(100), SimplePositionLerper(0.1)
             ),
         ),
         food_cloner=FoodCloner(
-            chance=0.02,
+            chance=0.03,
             size_dispersion=0.2,
             energy_dispersion=0.2,
             max_dispersion=50,
             max_length=500,
-            min_length=200,
             max_size=12,
+            min_size=3,
         ),
     )

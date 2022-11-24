@@ -5,7 +5,7 @@ and position binning.
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict
+from typing import DefaultDict
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -73,7 +73,7 @@ class PositionBinner:
 
     def compute_position_bins(
         self, positions: Iterable[Coordinate]
-    ) -> Dict[Tuple[int, int], List[Coordinate]]:
+    ) -> DefaultDict[Tuple[int, int], List[Coordinate]]:
         """Groups the specified positions into bins of close positions, where the size
         of each bin (which positions are deemed close to each other) is specified by this
         PositionBinner's bin_resolution.
@@ -81,14 +81,16 @@ class PositionBinner:
         positions_bins = defaultdict(list)  # type: ignore
         for position in positions:
             positions_bins[self.floor_position(position)].append(position)  # type: ignore
-        return dict(positions_bins)  # type: ignore
+        return positions_bins  # type: ignore
 
     def floor_position(self, position: Coordinate) -> Tuple[int, int]:
         """Returns the bin position tuple of ints that can be used to look up the
         specified position from the calculated position bins.
         """
-        return tuple(
-            map(lambda x: (x // self.bin_resolution) * self.bin_resolution, position)
+        bin_resolution = self.bin_resolution
+        return (
+            position.x // bin_resolution * bin_resolution,
+            position.y // bin_resolution * bin_resolution,
         )  # type: ignore
 
 
@@ -152,4 +154,4 @@ class SearchAlgorithm:
             positions=[x.position for x in entities]
         )
         bin_ = position_bins.get(binner.floor_position(entity.position))
-        return None if bin_ is None else min(bin_, key=entity.position.compute_distance)
+        return min(bin_, key=entity.position.compute_distance) if bin_ else None
