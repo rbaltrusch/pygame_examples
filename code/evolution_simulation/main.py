@@ -34,6 +34,8 @@ SCREEN_SIZE = Coordinate(800, 600)
 ANIMAL_CLONE_DISPERSION = 50
 ANIMAL_VISION_DISPERSION = 20
 ANIMAL_COLOUR_DISPERSION = 20
+ANIMAL_CLONING_SIZE_FACTOR = 0.7
+RANDOM_NEW_ANIMAL_CHANCE = 0.3
 
 
 def generate_random_position(screen_offset: int = 0) -> Coordinate:
@@ -90,6 +92,7 @@ def clone_animals(
     dispersion: int = 20,
     vision_dispersion: int = 20,
     colour_dispersion: int = 20,
+    cloning_size_factor: float = 0.5,
 ):
     """Appends a number of clones the specified list of animals"""
 
@@ -99,8 +102,10 @@ def clone_animals(
     new_animals: List[Animal] = []
     for animal in animals:
         if animal.size > animal.cloning_size:
-            animal.size /= 2
             new_animal = copy.deepcopy(animal)
+            new_animal.size = max(1, (1 - cloning_size_factor) * animal.size)
+            animal.size *= min(1, cloning_size_factor)
+
             new_animal.position = Coordinate(
                 x=_rand(animal.position.x), y=_rand(animal.position.y)
             )
@@ -108,7 +113,14 @@ def clone_animals(
             red_offset = random.randint(-colour_dispersion, colour_dispersion)
             new_animal.colour = (min(255, max(0, r + red_offset)), g, b)  # type: ignore
             new_animal.vision = max(
-                0, animal.vision + random.randint(-vision_dispersion, vision_dispersion)
+                1, animal.vision + random.randint(-vision_dispersion, vision_dispersion)
+            )
+            new_animal.cloning_size = max(0, animal.cloning_size + random.random())
+            new_animal.speed = max(
+                0.05, animal.speed * (1 + (+random.random() - 0.5) / 20)
+            )
+            new_animal.energy_loss = max(
+                0, animal.energy_loss * (1 + (+random.random() - 0.5) / 20)
             )
             new_animal.target_position = None
             new_animals.append(new_animal)
@@ -157,7 +169,11 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
             dispersion=ANIMAL_CLONE_DISPERSION,
             vision_dispersion=ANIMAL_VISION_DISPERSION,
             colour_dispersion=ANIMAL_COLOUR_DISPERSION,
+            cloning_size_factor=ANIMAL_CLONING_SIZE_FACTOR,
         )
+
+        if RANDOM_NEW_ANIMAL_CHANCE >= random.random():
+            animals.extend(init_animals(params.animal, amount=1))
 
         screen.fill((0, 0, 0))
         for entity in animals + foods:  # type: ignore
