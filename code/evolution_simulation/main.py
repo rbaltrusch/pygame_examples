@@ -4,7 +4,6 @@ Press Escape to exit, ENTER to init new simulation.
 """
 from __future__ import annotations
 
-import copy
 import random
 import statistics
 from collections import defaultdict
@@ -101,29 +100,32 @@ def clone_animals(
 
     new_animals: List[Animal] = []
     for animal in animals:
-        if animal.size > animal.cloning_size:
-            new_animal = copy.deepcopy(animal)
-            new_animal.size = max(1, (1 - cloning_size_factor) * animal.size)
-            animal.size *= min(1, cloning_size_factor)
+        if animal.size < animal.cloning_size:
+            continue
 
-            new_animal.position = Coordinate(
-                x=_rand(animal.position.x), y=_rand(animal.position.y)
-            )
-            r, g, b = animal.colour  # pylint: disable=invalid-name
-            red_offset = random.randint(-colour_dispersion, colour_dispersion)
-            new_animal.colour = (min(255, max(0, r + red_offset)), g, b)  # type: ignore
-            new_animal.vision = max(
-                1, animal.vision + random.randint(-vision_dispersion, vision_dispersion)
-            )
-            new_animal.cloning_size = max(0, animal.cloning_size + random.random())
-            new_animal.speed = max(
-                0.05, animal.speed * (1 + (+random.random() - 0.5) / 20)
-            )
-            new_animal.energy_loss = max(
+        new_animal = Animal(
+            size=max(1, (1 - cloning_size_factor) * animal.size),
+            speed=max(0.05, animal.speed * (1 + (+random.random() - 0.5) / 20)),
+            position=Coordinate(x=_rand(animal.position.x), y=_rand(animal.position.y)),
+            food_size_factor=animal.food_size_factor,
+            food_reach_distance=animal.food_reach_distance,
+            energy_loss=max(
                 0, animal.energy_loss * (1 + (+random.random() - 0.5) / 20)
-            )
-            new_animal.target_position = None
-            new_animals.append(new_animal)
+            ),
+            cloning_size=max(0, animal.cloning_size + random.random()),
+            search_algorithm=animal.search_algorithm,
+            random_position_generator=generate_random_position,
+            vision=max(
+                1,
+                animal.vision + random.randint(-vision_dispersion, vision_dispersion),
+            ),
+        )
+        animal.size *= min(1, cloning_size_factor)
+
+        r, g, b = animal.colour  # pylint: disable=invalid-name
+        red_offset = random.randint(-colour_dispersion, colour_dispersion)
+        new_animal.colour = (min(255, max(0, r + red_offset)), g, b)  # type: ignore
+        new_animals.append(new_animal)
     animals.extend(new_animals)
 
 
