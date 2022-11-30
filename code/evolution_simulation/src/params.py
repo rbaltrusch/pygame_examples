@@ -11,7 +11,7 @@ except ImportError:
     )
     numpy = None
 
-from src.search import SearchAlgorithm, PositionClusterer
+from src.search import SearchAlgorithmInterface, PositionClusterer
 
 
 @dataclass
@@ -49,7 +49,7 @@ class FoodParams:
 class AnimalParams:  # pylint: disable=too-many-instance-attributes
     """Simulation init parameters related to animals"""
 
-    search_algorithm: SearchAlgorithm
+    search_algorithm: SearchAlgorithmInterface
     initial_amount: int = 10
     size: Stat = Stat(average=10, standard_deviation=3)
     speed: Stat = Stat(average=2, standard_deviation=0.5)

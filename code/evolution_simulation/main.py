@@ -23,7 +23,7 @@ from src.plotting import plot_data
 from src.plotting import PlotData
 from src.search import PositionBinner
 from src.search import PositionClusterer
-from src.search import SearchAlgorithm
+from src.search import RandomSearchAlgorithm
 from src.search import SimplePositionClusterer
 from src.search import SimplePositionLerper
 
@@ -154,10 +154,10 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
                     foods = init_foods(params.food, params.position_clusterer)
                     animals = init_animals(params.animal, params.animal.initial_amount)
 
-        search_algorithm.update()
         animals = [animal for animal in animals if not animal.dead]
         foods = [food for food in foods if not food.dead]
         food_cloner.clone(foods, SCREEN_SIZE)
+        search_algorithm.update(foods)  # type: ignore
 
         foods_dict: DefaultDict[Coordinate, List[Food]] = defaultdict(list)
         for food in foods:
@@ -209,7 +209,7 @@ if __name__ == "__main__":
                 energy_decay=Stat(average=0.5),
             ),
             animal=AnimalParams(
-                search_algorithm=SearchAlgorithm(max_entities_considered=2),
+                search_algorithm=RandomSearchAlgorithm(50),
                 initial_amount=50,
                 vision=Stat(average=70, standard_deviation=10, min=1),
                 energy_loss=Stat(

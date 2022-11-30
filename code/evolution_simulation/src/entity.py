@@ -15,7 +15,7 @@ from typing import Tuple
 
 import pygame
 from src.coordinate import Coordinate
-from src.search import SearchAlgorithm
+from src.search import SearchAlgorithmInterface
 
 # pylint: disable=c-extension-no-member
 
@@ -149,7 +149,7 @@ class Animal:  # pylint: disable=too-many-instance-attributes
     food_reach_distance: float
     energy_loss: float
     cloning_size: float
-    search_algorithm: SearchAlgorithm
+    search_algorithm: SearchAlgorithmInterface
     random_position_generator: Callable[[], Coordinate]
     target_position: Optional[Coordinate] = field(init=False, default=None)
     base_animal_colour: Tuple[int, int, int] = (255, 100, 100)
@@ -199,7 +199,7 @@ class Animal:  # pylint: disable=too-many-instance-attributes
 
     def _choose_target_position(self, foods: List[Food]) -> List[Coordinate]:
         target_positions = self.search_algorithm.determine_target_position(
-            self, foods, distance=self.vision
+            self, foods, distance=self.vision  # type: ignore
         )
         if target_positions is None:
             return [

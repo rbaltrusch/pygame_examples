@@ -151,6 +151,20 @@ class CompositePositionClusterer:
         return positions  # type: ignore
 
 
+class SearchAlgorithmInterface(Protocol):
+    """Search algorithm interface"""
+
+    def determine_target_position(
+        self, entity: Animal, entities: List[Entity], distance: int
+    ) -> Optional[List[Coordinate]]:
+        """Returns a list of potential targets, or none if none can be found"""
+        ...
+
+    def update(self, entities: List[Entity]):
+        """Updates the search algorithm"""
+        ...
+
+
 @dataclass
 class SearchAlgorithm:
     """Simple search algorithm to find the closest target from a list of entities"""
@@ -161,7 +175,7 @@ class SearchAlgorithm:
     max_determined_targets: int = 1
 
     def determine_target_position(
-        self, entity: Animal, entities: Iterable[Entity], distance: int
+        self, entity: Animal, entities: List[Entity], distance: int
     ) -> Optional[List[Coordinate]]:
         """Uses a position binner (using the specified distance as the bin_resolution)
         to find the closest of the specified entities to the specified entity. If none
@@ -180,7 +194,7 @@ class SearchAlgorithm:
             : self.max_determined_targets
         ]
 
-    def update(self):
+    def update(self, entities: List[Entity]):  # pylint: disable=unused-argument
         """Updates the algorithm, needs to be called once every game tick."""
         self._position_bins = {}
 
@@ -193,3 +207,25 @@ class SearchAlgorithm:
         )
         self._position_bins[binner.bin_resolution] = bins_
         return bins_
+
+
+@dataclass
+class RandomSearchAlgorithm:
+    """Search algorithm that picks the first entity found within the specified distance"""
+
+    max_entities_considered: int
+
+    def determine_target_position(  # pylint: disable=no-self-use
+        self, entity: Animal, entities: List[Entity], distance: int
+    ) -> Optional[List[Coordinate]]:
+        """Picks the first entity found within the specified distance"""
+        for i, entity_ in enumerate(entities):
+            if entity.position.compute_distance(entity_.position) <= distance:
+                return [entity_.position]
+            if i >= self.max_entities_considered:
+                break
+        return None
+
+    def update(self, entities: List[Entity]):  # pylint: disable=no-self-use
+        """Randomly shuffles entities to avoid always returning same target pos"""
+        random.shuffle(entities)
