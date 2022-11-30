@@ -65,9 +65,9 @@ def init_foods(params: FoodParams, clusterer: PositionClusterer) -> List[Food]:
     ]
 
 
-def init_animals(params: AnimalParams) -> List[Animal]:
+def init_animals(params: AnimalParams, amount: int) -> List[Animal]:
     """Initialises a list of animals in random positions using the specified parameters"""
-    positions = [generate_random_position() for _ in range(params.initial_amount)]
+    positions = [generate_random_position() for _ in range(amount)]
     return [
         Animal(
             food_size_factor=params.food_size_factor.compute_random_number(),
@@ -121,7 +121,8 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
     print(f"{SEED=}")
     random.seed(SEED)
     foods = init_foods(params.food, params.position_clusterer)
-    animals = init_animals(params.animal)
+    animals = init_animals(params.animal, params.animal.initial_amount)
+    search_algorithm = params.animal.search_algorithm
     pygame.init()
     clock = pygame.time.Clock()
     screen = pygame.display.set_mode(size=tuple(SCREEN_SIZE))
@@ -137,8 +138,9 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
                     terminated = True
                 if event.key == pygame.K_RETURN:
                     foods = init_foods(params.food, params.position_clusterer)
-                    animals = init_animals(params.animal)
+                    animals = init_animals(params.animal, params.animal.initial_amount)
 
+        search_algorithm.update()
         animals = [animal for animal in animals if not animal.dead]
         foods = [food for food in foods if not food.dead]
         food_cloner.clone(foods, SCREEN_SIZE)

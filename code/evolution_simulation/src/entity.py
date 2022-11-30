@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from dataclasses import field
 from functools import cached_property
 from typing import Callable
-from typing import Dict
+from typing import DefaultDict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -27,10 +27,10 @@ class FoodCloner:
     chance: float
     max_dispersion: float
     size_dispersion: float
+    min_size: float
     max_size: float
     energy_dispersion: float
     max_length: int
-    min_length: int
 
     def clone(self, foods: List[Food], screen_size: Coordinate):
         """Adds clones of the specified foods to the foods list"""
@@ -56,21 +56,21 @@ class FoodCloner:
         self, screen_dimension: float, food_coordinate: float
     ) -> float:
         half_dispersion = self.max_dispersion / 2
-        min_ = screen_dimension * half_dispersion
+        max_ = screen_dimension - half_dispersion
         value = food_coordinate + self._get_random_dispersion_factor(
             self.max_dispersion
         )
-        return min(min_, max(half_dispersion, value))
+        return min(max_, max(half_dispersion, value))
 
     def create_new_food(self, food: Food, position: Coordinate) -> Food:
         """Returns a new food at the specified position, based on the specified food"""
         size_factor = 1 + self._get_random_dispersion_factor(self.size_dispersion)
         energy_factor = 1 + self._get_random_dispersion_factor(self.energy_dispersion)
         return Food(
-            size=min(self.max_size, size_factor * food.size),
+            size=max(self.min_size, min(self.max_size, size_factor * food.size)),
             energy=energy_factor * food.INITIAL_ENERGY,
             position=position,
-            energy_decay=food.energy_decay,
+            energy_decay=0.8 * energy_factor * food.energy_decay,
         )
 
     @staticmethod
@@ -153,42 +153,61 @@ class Animal:  # pylint: disable=too-many-instance-attributes
     random_position_generator: Callable[[], Coordinate]
     target_position: Optional[Coordinate] = field(init=False, default=None)
     base_animal_colour: Tuple[int, int, int] = (255, 100, 100)
+    min_energy_loss = 0.1
 
-    def update(self, foods: Dict[Coordinate, Food]):
+    def update(
+        self, foods: List[Food], foods_dict: DefaultDict[Coordinate, List[Food]]
+    ):
         """Updates the animal by choosing a target, moving towards it, eating (if possible)
         and losing energy.
         """
-        self.size -= max(0, self.energy_loss)
-        self.target_position = self._choose_target_position(foods)
+        self.size -= max(
+            self.min_energy_loss, self.energy_loss * self.speed * self.vision
+        )
+        target_positions = self._choose_target_position(foods)
+        if target_positions is None:
+            return
+
+        self.target_position = target_positions[0]
         move_towards(self.position, self.target_position, self.speed)
-        self._eat(foods)
+        for target_position in target_positions:
+            self._eat(foods_dict, target_position)
 
     def draw(self, screen: pygame.surface.Surface):
         """Draws the animal on the screen"""
         pygame.draw.circle(screen, self.colour, tuple(self.position), self.size)
 
-    def _eat(self, foods: Dict[Coordinate, Food]):
-        distance = self.position.compute_distance(self.target_position)  # type: ignore
-        if distance <= max(0, self.food_reach_distance):
-            food = foods.get(self.target_position)  # type: ignore
-            self.target_position = None
-            if food and not food.dead:
-                # treating the entity as a square
-                # each side grows by the square root of the total size increase
-                self.size += math.sqrt(food.energy * self.food_size_factor)
-                food.eat()
+    def _eat(
+        self, foods: DefaultDict[Coordinate, List[Food]], target_position: Coordinate
+    ):
+        distance = self.position.compute_distance(target_position)  # type: ignore
+        if distance > max(0, self.food_reach_distance):
+            return
 
-    def _choose_target_position(self, foods: Dict[Coordinate, Food]) -> Coordinate:
-        target_position = self.search_algorithm.determine_target_position(
-            self, list(foods.values()), distance=self.vision
+        foods_ = foods.get(target_position)  # type: ignore
+        self.target_position = None
+        if not foods_:
+            return
+
+        for food in foods_:
+            if food.dead:
+                continue
+            # treating the entity as a square
+            # each side grows by the square root of the total size increase
+            self.size += math.sqrt(food.energy * self.food_size_factor)
+            food.eat()
+
+    def _choose_target_position(self, foods: List[Food]) -> List[Coordinate]:
+        target_positions = self.search_algorithm.determine_target_position(
+            self, foods, distance=self.vision
         )
-        if target_position is None:
-            return (
+        if target_positions is None:
+            return [
                 self.target_position
                 if self.target_position is not None
                 else self.random_position_generator()
-            )
-        return target_position
+            ]
+        return target_positions
 
     @property
     def dead(self) -> bool:

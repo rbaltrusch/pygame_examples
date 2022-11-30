@@ -2,10 +2,13 @@
 """Contains algorithms used to traverse 2d space using linear interpolation
 and position binning.
 """
+import random
 import statistics
 from collections import defaultdict
 from dataclasses import dataclass
+from dataclasses import field
 from typing import DefaultDict
+from typing import Dict
 from typing import Iterable
 from typing import List
 from typing import Optional
@@ -19,10 +22,24 @@ from src.coordinate import Coordinate
 # pylint: disable=too-few-public-methods
 
 
+PositionBins = DefaultDict[Tuple[int, int], List[Coordinate]]
+
+
 class Entity(Protocol):
     """Entity interface"""
 
     position: Coordinate
+
+    def draw(self, screen: pygame.surface.Surface):
+        """Draws the entity on the screen"""
+        ...
+
+
+class Animal(Protocol):
+    """Animal interface"""
+
+    position: Coordinate
+    vision: int
 
     def draw(self, screen: pygame.surface.Surface):
         """Draws the entity on the screen"""
@@ -71,9 +88,7 @@ class PositionBinner:
     def __post_init__(self):
         self.bin_resolution = int(self.bin_resolution)
 
-    def compute_position_bins(
-        self, positions: Iterable[Coordinate]
-    ) -> DefaultDict[Tuple[int, int], List[Coordinate]]:
+    def compute_position_bins(self, positions: Iterable[Coordinate]) -> PositionBins:
         """Groups the specified positions into bins of close positions, where the size
         of each bin (which positions are deemed close to each other) is specified by this
         PositionBinner's bin_resolution.
@@ -140,18 +155,41 @@ class CompositePositionClusterer:
 class SearchAlgorithm:
     """Simple search algorithm to find the closest target from a list of entities"""
 
+    max_entities_considered: int
     binner_type = PositionBinner
+    _position_bins: Dict[int, PositionBins] = field(init=False, default_factory=dict)
+    max_determined_targets: int = 1
 
     def determine_target_position(
-        self, entity: Entity, entities: List[Entity], distance: int
-    ) -> Optional[Coordinate]:
+        self, entity: Animal, entities: Iterable[Entity], distance: int
+    ) -> Optional[List[Coordinate]]:
         """Uses a position binner (using the specified distance as the bin_resolution)
         to find the closest of the specified entities to the specified entity. If none
         can be found in that position bin, return None, else return the closest entity in the bin.
         """
         binner = self.binner_type(bin_resolution=distance)
-        position_bins = binner.compute_position_bins(
-            positions=[x.position for x in entities]
-        )
+        position_bins = self._compute_bins(binner, entities)
         bin_ = position_bins.get(binner.floor_position(entity.position))
-        return min(bin_, key=entity.position.compute_distance) if bin_ else None
+        if not bin_:
+            return None
+
+        considered_entities = round(self.max_entities_considered * entity.vision / 50)
+        if len(bin_) > considered_entities:
+            bin_ = random.sample(bin_, k=considered_entities)
+        return sorted(bin_, key=entity.position.compute_distance)[
+            : self.max_determined_targets
+        ]
+
+    def update(self):
+        """Updates the algorithm, needs to be called once every game tick."""
+        self._position_bins = {}
+
+    def _compute_bins(
+        self, binner: PositionBinner, entities: Iterable[Entity]
+    ) -> PositionBins:
+        bins_ = self._position_bins.get(
+            binner.bin_resolution,
+            binner.compute_position_bins(positions=[x.position for x in entities]),
+        )
+        self._position_bins[binner.bin_resolution] = bins_
+        return bins_
