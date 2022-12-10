@@ -214,18 +214,29 @@ class RandomSearchAlgorithm:
     """Search algorithm that picks the first entity found within the specified distance"""
 
     max_entities_considered: int
+    _positions: Optional[Iterable[Tuple[float, float]]] = None
 
-    def determine_target_position(  # pylint: disable=no-self-use
+    def determine_target_position(  # pylint: disable=invalid-name
         self, entity: Animal, entities: List[Entity], distance: int
     ) -> Optional[List[Coordinate]]:
         """Picks the first entity found within the specified distance"""
-        for i, entity_ in enumerate(entities):
-            if entity.position.compute_distance(entity_.position) <= distance:
-                return [entity_.position]
-            if i >= self.max_entities_considered:
+        # Note that this function is slightly ugly, this is for optimization purposes.
+        # This assumes that entities and their positions are constant during 1 processing tick.
+        if self._positions is None:
+            self._positions = tuple(tuple(x.position) for x in entities)  # type: ignore
+
+        x, y = entity.position
+        square_dist = distance ** 2
+        max_entities_considered = self.max_entities_considered
+
+        for i, (x2, y2) in enumerate(self._positions):
+            if (x - x2) ** 2 + (y - y2) ** 2 <= square_dist:
+                return [entities[i].position]
+            if i >= max_entities_considered:
                 break
         return None
 
-    def update(self, entities: List[Entity]):  # pylint: disable=no-self-use
+    def update(self, entities: List[Entity]):
         """Randomly shuffles entities to avoid always returning same target pos"""
         random.shuffle(entities)
+        self._positions = None
