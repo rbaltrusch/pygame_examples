@@ -232,5 +232,7 @@ if __name__ == "__main__":
             max_length=800,
             max_size=12,
             min_size=3,
+            min_energy=2,
+            energy_decay_factor=0.8,
         ),
     )

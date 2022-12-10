@@ -31,6 +31,8 @@ class FoodCloner:
     max_size: float
     energy_dispersion: float
     max_length: int
+    min_energy: float
+    energy_decay_factor: float
 
     def clone(self, foods: List[Food], screen_size: Coordinate):
         """Adds clones of the specified foods to the foods list"""
@@ -68,9 +70,9 @@ class FoodCloner:
         energy_factor = 1 + self._get_random_dispersion_factor(self.energy_dispersion)
         return Food(
             size=max(self.min_size, min(self.max_size, size_factor * food.size)),
-            energy=energy_factor * food.INITIAL_ENERGY,
+            energy=max(self.min_energy, energy_factor * food.INITIAL_ENERGY),
             position=position,
-            energy_decay=0.8 * energy_factor * food.energy_decay,
+            energy_decay=self.energy_decay_factor * energy_factor * food.energy_decay,
         )
 
     @staticmethod
