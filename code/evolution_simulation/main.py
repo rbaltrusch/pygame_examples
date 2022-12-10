@@ -206,18 +206,18 @@ if __name__ == "__main__":
             food=FoodParams(
                 initial_amount=500,
                 energy=Stat(average=10, standard_deviation=4, min=1),
-                energy_decay=Stat(average=0.5),
+                energy_decay=Stat(average=0.7),
             ),
             animal=AnimalParams(
                 search_algorithm=RandomSearchAlgorithm(50),
                 initial_amount=50,
                 vision=Stat(average=70, standard_deviation=10, min=1),
                 energy_loss=Stat(
-                    average=0.00007, standard_deviation=0.00001, min=0.00001
+                    average=0.000025, standard_deviation=0.00001, min=0.00001
                 ),
                 cloning_size=Stat(average=25, standard_deviation=5),
                 food_reach_distance=Stat(average=10, standard_deviation=2, min=1),
-                speed=Stat(average=3, standard_deviation=0.5, min=0.3),
+                speed=Stat(average=5, standard_deviation=0.5, min=0.3),
                 food_size_factor=Stat(average=1),
             ),
             position_clusterer=SimplePositionClusterer(
@@ -225,11 +225,11 @@ if __name__ == "__main__":
             ),
         ),
         food_cloner=FoodCloner(
-            chance=0.03,
+            chance=0.05,
             size_dispersion=0.2,
             energy_dispersion=0.2,
             max_dispersion=50,
-            max_length=500,
+            max_length=800,
             max_size=12,
             min_size=3,
         ),
