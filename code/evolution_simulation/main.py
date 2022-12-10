@@ -178,7 +178,7 @@ def main(params: RunnerParams, food_cloner: FoodCloner):
             animals.extend(init_animals(params.animal, amount=1))
 
         screen.fill((0, 0, 0))
-        for entity in animals + foods:  # type: ignore
+        for entity in foods + animals:  # type: ignore
             entity.draw(screen)
         pygame.display.flip()
         clock.tick(FRAMERATE)
