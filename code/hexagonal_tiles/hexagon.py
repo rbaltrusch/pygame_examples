@@ -114,4 +114,4 @@ class FlatTopHexagonTile(HexagonTile):
     def centre(self) -> Tuple[float, float]:
         """Centre of the hexagon"""
         x, y = self.position  # pylint: disable=invalid-name
-        return (x, y + self.minimal_radius)
+        return (x + self.radius / 2, y + self.minimal_radius)
