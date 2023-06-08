@@ -9,6 +9,7 @@ This repository contains the following small pygame examples:
 - [Dynamic lighting](code/simple_lighting): contains a small draft implementation for dynamic in-game lighting.
 - [Hexagonal grid](code/hexagonal_tiles): contains an implementation of a hexagonal grid, including collision handling.
 - [Tidy event queue](code/tidy_event_queue): contains an exercise in decoupling complex pygame event handling constructs into separate parts.
+- [Async events](code/async_events): contains an example implementation for an asynchronous event handler (useful for writing linear-looking code for events with execution spread out over multiple game cycles).
 - [Squish and stretch](code/squish_and_stretch): contains an example implementation of squishing and stretching an image.
 - [Timed events](code/timed_events): contains an implementation of callbacks executed after a specified delay. Not pygame-specific.
 - [Random starry sky](code/random_screen_animation): generates a random starry sky.
