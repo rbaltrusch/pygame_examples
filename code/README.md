@@ -3,6 +3,7 @@
 This repository contains the following small pygame examples:
 - [Particle system](code/particle_system): contains a simple, but effective, particle system implementation.
 - [Evolution simulation](code/evolution_simulation): contains a simple simulation of evolving animals hunting for food.
+- [Cloth simulation](code/cloth_simulation): contains a cloth simulation with custom physics.
 - [Game console](code/game_console): contains a minimal implementation of an in-game console.
 - [Animation testing tool](code/animator): can be used to test out animations. Contains a fully featured in-game console with a decoupled and flexible design.
 - [Networked game](code/networked_game): contains a minimal implementation of a networked game, featuring one external server and two separate clients, communicating with each other through the server.
