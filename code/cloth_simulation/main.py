@@ -9,68 +9,58 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import List, Optional
 import pygame
 
 MIN_MASS = 0.01
 NODE_COLOUR = (255, 255, 255)
 LINE_COLOUR = (255, 255, 255)
-NODE_RADIUS = 10
-MASS_PER_LENGTH = 100
+NODE_RADIUS = 3
+NODE_MASS = 100
 GRAVITY = 10_000
+MIN_FORCE_THRESHOLD = 0
 AIR_FRICTION_COEFFICIENT = 500
-FPS = 100
+FPS = 200
 TICK = 0.02
+NODE_SELECT_RADIUS = 20
 
 
 @dataclass
 class NodeConnection:
-    node: Node
+    start: Node
+    end: Node
     nominal_length: float
-    mass_per_length: float
     elasticity: float = 0
 
     def __post_init__(self):
         self.length: float = self.nominal_length
 
-    def render(self, screen: pygame.surface.Surface, end_position: Tuple[float, float]):
-        pygame.draw.line(screen, LINE_COLOUR, self.node.position, end_position)
+    def render(self, screen: pygame.surface.Surface):
+        pygame.draw.line(screen, LINE_COLOUR, self.start.position, self.end.position)
 
-    # def calculate_vertical_force(self) -> float:
-    #     return self.node.calculate_vertical_force()
-
-    def calculate_elastic_restoring_force(self, node: Node) -> float:
-        direction = 1 if self.node.y < node.y else -1
-        length = math.dist(self.node.position, node.position)
-        # print(
-        #     "len",
-        #     length,
-        #     self.node.position,
-        #     node.position,
-        #     (self.nominal_length - length) * self.elasticity * direction,
-        # )
-        return (self.nominal_length - length) * self.elasticity * direction
-
-    @property
-    def mass(self) -> float:
-        return self.mass_per_length * self.nominal_length
-
-    @property
-    def total_mass(self) -> float:
-        mass = self.mass
-        if self.node.previous_node_connection is None:
-            return mass
-        return mass + self.node.previous_node_connection.total_mass
+    def set_elastic_restoring_forces(self) -> None:
+        direction = 1 if self.start.y < self.end.y else -1
+        length = math.dist(self.start.position, self.end.position)
+        force = (self.nominal_length - length) * self.elasticity * direction
+        self.end.elastic_restoring_force += force / 2
+        self.start.elastic_restoring_force -= force / 2
 
 
 @dataclass
 class Node:
+    mass: float
     x: float = 0
     y: float = 0
     speed_x: float = 0
     speed_y: float = 0
     previous_node_connection: Optional[NodeConnection] = None
     affixed: bool = False
+
+    def __post_init__(self):
+        self.elastic_restoring_force: float = 0
+
+    def reset(self):
+        self.elastic_restoring_force = 0
 
     def update(self):
         if self.affixed:
@@ -80,29 +70,25 @@ class Node:
 
     def render(self, screen: pygame.surface.Surface) -> None:
         if self.previous_node_connection:
-            self.previous_node_connection.render(screen, self.position)
+            self.previous_node_connection.render(screen)
         pygame.draw.circle(screen, NODE_COLOUR, self.position, NODE_RADIUS)
 
     def calculate_vertical_acceleration(self) -> float:
-        if self.previous_node_connection is None:
-            return 0
         force = self.calculate_vertical_force()
         air_resistance = min(abs(force), self.calculate_air_resistance_force())
         drag_direction = 1 if self.speed_y > 0 else 0
         total_force = force - air_resistance * drag_direction
-        return total_force / max(self.previous_node_connection.mass, MIN_MASS)
+        if abs(total_force) < MIN_FORCE_THRESHOLD:
+            total_force = 0
+        return total_force / max(self.mass, MIN_MASS)
+
+    def set_elastic_restoring_force(self) -> None:
+        if self.previous_node_connection is not None:
+            self.previous_node_connection.set_elastic_restoring_forces()
 
     def calculate_vertical_force(self) -> float:
-        segment_force = self.calculate_segment_force()
-        return segment_force
-
-    def calculate_segment_force(self) -> float:
-        if self.previous_node_connection is None:
-            return 0
-        return (
-            self.previous_node_connection.mass * GRAVITY
-            + self.previous_node_connection.calculate_elastic_restoring_force(self)
-        )
+        force_of_gravity = self.mass * GRAVITY
+        return force_of_gravity + self.elastic_restoring_force
 
     def calculate_air_resistance_force(self) -> float:
         return AIR_FRICTION_COEFFICIENT * self.speed_y**2
@@ -112,18 +98,26 @@ class Node:
         return (self.x, self.y)
 
 
-def connect_nodes(nodes: List[Node], length: float, elasticity: float) -> None:
+def connect_nodes(nodes: List[Node], elasticity: float) -> None:
     if len(nodes) < 2:
         return
-    # nodes[0].affixed = True
+    nodes[0].affixed = True
     for previous_node, node in zip(nodes, nodes[1:]):
         node.previous_node_connection = NodeConnection(
-            previous_node,
-            nominal_length=length,
-            mass_per_length=MASS_PER_LENGTH,
+            start=previous_node,
+            end=node,
+            nominal_length=0,
             elasticity=elasticity,
         )
-        node.y = previous_node.y + length * 0.8
+
+
+def update_nodes(nodes: List[Node]) -> None:
+    for node in nodes:
+        node.reset()
+    for node in nodes:
+        node.set_elastic_restoring_force()
+    for node in nodes:
+        node.update()
 
 
 def main():
@@ -131,8 +125,8 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((800, 600))
     clock = pygame.time.Clock()
-    nodes = [Node(x=200, y=50) for _ in range(8)]
-    connect_nodes(nodes, length=1, elasticity=20000)
+    nodes = [Node(x=200, y=50, mass=NODE_MASS) for _ in range(10)]
+    connect_nodes(nodes, elasticity=200_000)
 
     terminated = False
     selected_node: Optional[Node] = None
@@ -144,15 +138,21 @@ def main():
                 mouse_pos = pygame.mouse.get_pos()
                 distances = [math.dist(x.position, mouse_pos) for x in nodes]
                 dist, node = min(zip(distances, nodes))
-                if dist < NODE_RADIUS:
+                if dist < max(NODE_RADIUS, NODE_SELECT_RADIUS):
                     selected_node = node
+                else:
+                    node.previous_node_connection = None
             elif event.type == pygame.MOUSEBUTTONUP:
                 selected_node = None
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    nodes = [Node(x=200, y=50, mass=NODE_MASS) for _ in range(10)]
+                    connect_nodes(nodes, length=0, elasticity=200_000)
 
         if selected_node is not None:
             selected_node.y = pygame.mouse.get_pos()[1]
-        for node in nodes:
-            node.update()
+
+        update_nodes(nodes)
         screen.fill((0, 0, 0))
         for node in nodes:
             node.render(screen)
