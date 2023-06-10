@@ -5,13 +5,14 @@
 
 A repository for short pygame drafts, examples, tutorials and more!
 
-Currently, this repository contains a draft lighting system, a particle system, a networked game, and more.
+Currently, this repository contains a draft lighting system, a particle system, a networked game, a hexogonal tile system, a cloth simulation and other cool pygame examples.
 
 ![Gif of the particle effects](https://github.com/rbaltrusch/pygame_examples/blob/master/media/particle_effects.gif?raw=true "Gif of the particle effects")
 ![Gif of the lighting system](https://github.com/rbaltrusch/pygame_examples/blob/master/media/lighting_system.gif?raw=true "Gif of the lighting system")
 ![Gif of the hexagonal tile map](media/hexagons.gif?raw=true "Gif of the hexagonal tile map")
 ![Gif of a red light source](media/red_light.gif?raw=true "Gif of a red light source")
 ![Gif of an evolution simulation](media/evolution_sim.gif?raw=true "Gif of an evolution simulation")
+![Gif of the cloth simulation](media/cloth_sim2.gif?raw=true "Gif of the cloth simulation")
 
 ## Getting started
 
@@ -32,6 +33,7 @@ To run some of the examples, navigate to the respective folder in the code folde
 This repository contains the following small pygame examples:
 - [Particle system](code/particle_system): contains a simple, but effective, particle system implementation.
 - [Evolution simulation](code/evolution_simulation): contains a simple simulation of evolving animals hunting for food.
+- [Cloth simulation](code/cloth_simulation): contains a cloth simulation with custom physics.
 - [Game console](code/game_console): contains a minimal implementation of an in-game console.
 - [Animation testing tool](code/animator): can be used to test out animations. Contains a fully featured in-game console with a decoupled and flexible design.
 - [Networked game](code/networked_game): contains a minimal implementation of a networked game, featuring one external server and two separate clients, communicating with each other through the server.
