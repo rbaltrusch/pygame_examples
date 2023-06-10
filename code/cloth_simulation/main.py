@@ -6,9 +6,11 @@ Cloth simulation with custom physics implementation:
 Controls:
     Pick up and move a node by dragging it with the mouse
     Press A while dragging a node to toggle its affixed status
+    Press S while dragging a node to snip its vertical connection
     Press Q to decrease wind force / increase wind to the left
     Press W to increase wind force / increase wind to the right
     Press R to respawn cloth nodes
+    Press D to toggle debug render mode
     Press Escape to exit
 """
 
@@ -20,7 +22,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import pygame
 
 
@@ -35,6 +37,9 @@ GRAVITY = 10_000
 MIN_FORCE_THRESHOLD = 0
 AIR_FRICTION_COEFFICIENT = 500
 ELASTICITY = 1_000_000
+
+
+Colour = Tuple[int, int, int]
 
 
 def calculate_acceleration(force: float, speed: float, mass: float) -> float:
@@ -103,6 +108,8 @@ class Node:
     previous_node_x_connection: Optional[NodeConnection] = None
     affixed: bool = False
 
+    draw_debug = True
+
     def __post_init__(self):
         self.elastic_restoring_y_force: float = 0
         self.elastic_restoring_x_force: float = 0
@@ -123,19 +130,45 @@ class Node:
 
     def render(self, screen: pygame.surface.Surface) -> None:
         """Renders the node using a four-sided polygon"""
+        if self.affixed and self.draw_debug:
+            pygame.draw.circle(screen, (255, 0, 0), self.position, NODE_RADIUS)
+
         if not self.previous_node_x_connection or not self.previous_node_y_connection:
+            return
+
+        conn = self.previous_node_x_connection.start.previous_node_y_connection
+        if not conn:
             return
 
         points = [
             self.previous_node_x_connection.start.position,
             self.position,
             self.previous_node_y_connection.start.position,
+            conn.start.position,
         ]
-        conn = self.previous_node_x_connection.start.previous_node_y_connection
-        if conn:
-            points.append(conn.start.position)
-        pygame.draw.polygon(screen, POLYGON_COLOUR, points)
-        pygame.draw.polygon(screen, LINE_COLOUR, points, width=1)
+        polygon_colour = self._determine_polygon_colour(points)
+        pygame.draw.polygon(screen, polygon_colour, points)
+
+        # polygon outline
+        if self.draw_debug:
+            pygame.draw.polygon(screen, LINE_COLOUR, points, width=1)
+
+    def _determine_polygon_colour(self, points: List[Tuple[float, float]]) -> Colour:
+        if self.draw_debug:
+            return POLYGON_COLOUR
+
+        # using area of trapezium as area approximation
+        # this assumes that vertical sides are more likely to be parallel due to gravity.
+        y1, y3, y4, y2 = [point[1] for point in points]
+        height = 0.5 * ((y1 - y2) + (y3 - y4))
+        area = abs((self.x - self.previous_node_x_connection.start.x) * height)  # type: ignore
+
+        max_area = 2000
+        area_colour_scaling = 11
+        blue = min(255, min(area, max_area) / area_colour_scaling)
+        green = min(255, int(blue) + 50)
+        polygon_colour = (0, green, int(blue))
+        return polygon_colour
 
     def _calculate_vertical_acceleration(self) -> float:
         """
@@ -151,11 +184,13 @@ class Node:
 
     def set_elastic_restoring_force(self) -> None:
         """
-        Sets vertical elastic forces.
-        Crashes for some reason when also setting horizontal forces?
+        Sets vertical and horizontal elastic forces.
+        Comment out horizontal forces for the initial (also cool-looking) simulation
         """
         if self.previous_node_y_connection is not None:
             self.previous_node_y_connection.set_elastic_restoring_forces()
+        if self.previous_node_x_connection is not None:
+            self.previous_node_x_connection.set_elastic_restoring_forces()
 
     @property
     def position(self):
@@ -201,11 +236,11 @@ def update_nodes(nodes: List[Node], wind: float) -> None:
 def init_cloth_nodes() -> List[Node]:
     """Initializes a grid of interconnected nodes to simulate cloth, then returns all  nodes"""
     ropes: List[List[Node]] = []
-    for x in range(200, 600, 50):
+    for x in range(200, 600, 25):
         nodes = [Node(x=x, y=50, mass=NODE_MASS) for _ in range(10)]
         connect_nodes(nodes, elasticity=ELASTICITY)
         ropes.append(nodes)
-    connect_ropes(ropes, elasticity=ELASTICITY * 100)
+    connect_ropes(ropes, elasticity=ELASTICITY / 2)
     return [node for rope in ropes for node in rope]
 
 
@@ -216,6 +251,7 @@ def main():
     clock = pygame.time.Clock()
     nodes = init_cloth_nodes()
 
+    font = pygame.font.SysFont("Arial", 20)
     wind: float = 0
     terminated = False
     selected_node: Optional[Node] = None
@@ -235,21 +271,28 @@ def main():
                 if event.key == pygame.K_r:
                     nodes = init_cloth_nodes()
                 elif event.key == pygame.K_q:
-                    wind -= 100_000
+                    wind -= 1_000_000
                 elif event.key == pygame.K_w:
-                    wind += 100_000
+                    wind += 1_000_000
                 elif event.key == pygame.K_a and selected_node:
                     selected_node.affixed = not selected_node.affixed
                     selected_node = None
+                elif event.key == pygame.K_s and selected_node:
+                    selected_node.previous_node_y_connection = None
+                elif event.key == pygame.K_d:
+                    Node.draw_debug = not Node.draw_debug
 
         if selected_node is not None:
             selected_node.x, selected_node.y = pygame.mouse.get_pos()
 
-        print(f"{wind=}")
         update_nodes(nodes, wind)
         screen.fill((0, 0, 0))
         for node in nodes:
             node.render(screen)
+        screen.blit(font.render(f"Wind: {wind//1000}k", True, LINE_COLOUR), (700, 50))
+        screen.blit(
+            font.render(f"Debug: {Node.draw_debug}", True, LINE_COLOUR), (700, 75)
+        )
         pygame.display.flip()
         clock.tick(FPS)
 

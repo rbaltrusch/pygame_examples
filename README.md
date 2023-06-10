@@ -12,7 +12,7 @@ Currently, this repository contains a draft lighting system, a particle system, 
 ![Gif of the hexagonal tile map](media/hexagons.gif?raw=true "Gif of the hexagonal tile map")
 ![Gif of a red light source](media/red_light.gif?raw=true "Gif of a red light source")
 ![Gif of an evolution simulation](media/evolution_sim.gif?raw=true "Gif of an evolution simulation")
-![Gif of the cloth simulation](media/cloth_sim.gif?raw=true "Gif of the cloth simulation")
+![Gif of the cloth simulation](media/cloth_sim2.gif?raw=true "Gif of the cloth simulation")
 
 ## Getting started
 
